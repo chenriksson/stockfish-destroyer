@@ -1,0 +1,7 @@
+# LF everywhere: the bash scripts, WSL and Cowork sessions all read the same checkout,
+# and Windows CRLF checkouts otherwise show every file as modified from Linux.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
