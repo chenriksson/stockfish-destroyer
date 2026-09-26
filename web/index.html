@@ -4,21 +4,136 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stockfish Destroyer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <aside id="games"><h1>Games</h1><ul id="game-list"></ul></aside>
-    <main>
-      <h2 id="title">Select a game</h2>
-      <div id="board" class="cg-wrap"></div>
-      <nav id="controls">
-        <button data-step="first">⏮</button>
-        <button data-step="prev">◀</button>
-        <button data-step="play">▶</button>
-        <button data-step="next">▶|</button>
-        <button data-step="last">⏭</button>
-      </nav>
-    </main>
-    <section id="moves"></section>
+    <header id="topbar">
+      <div class="brand">
+        <span class="wordmark">Destroyer</span>
+        <span class="tag mono" id="brand-tag">Rust · 5 s/move</span>
+      </div>
+
+      <div class="ladder-wrap">
+        <div id="ladder" class="ladder" aria-label="Elo ladder"></div>
+        <div id="campaign" class="campaign"></div>
+      </div>
+
+      <div class="best empty" id="best">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 4h10v5a5 5 0 0 1-10 0V4z" /><path d="M7 6H4a3 3 0 0 0 3 3" /><path d="M17 6h3a3 3 0 0 1-3 3" />
+        </svg>
+        <div class="best-text">
+          <span class="best-label">Highest Elo beaten</span>
+          <span class="best-value" id="best-elo">—</span>
+        </div>
+      </div>
+    </header>
+
+    <div id="layout">
+      <aside id="games" class="pane">
+        <div class="pane-head">
+          <h2>Games</h2>
+          <span id="games-summary" class="mono"></span>
+        </div>
+        <div id="game-list"></div>
+      </aside>
+
+      <main>
+        <div id="match" class="match" hidden>
+          <div class="match-row">
+            <div class="player">
+              <span class="swatch white"></span>
+              <span class="name" id="p-white"></span>
+              <span class="side">white</span>
+            </div>
+            <span class="score" id="score"></span>
+            <div class="player right">
+              <span class="side">black</span>
+              <span class="name" id="p-black"></span>
+              <span class="swatch black"></span>
+            </div>
+          </div>
+          <div class="match-meta" id="match-meta"></div>
+        </div>
+
+        <div id="board-wrap">
+          <div id="ranks" class="coords ranks"></div>
+          <div id="board-frame">
+            <div id="board" class="cg-wrap"></div>
+            <div id="banner" class="banner" aria-live="polite">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 4h10v5a5 5 0 0 1-10 0V4z" /><path d="M7 6H4a3 3 0 0 0 3 3" /><path d="M17 6h3a3 3 0 0 1-3 3" />
+              </svg>
+              <div class="banner-text">
+                <span class="banner-title" id="banner-title"></span>
+                <span class="banner-sub" id="banner-sub"></span>
+              </div>
+            </div>
+          </div>
+          <div id="files" class="coords files"></div>
+        </div>
+
+        <nav id="controls" aria-label="Replay controls">
+          <div class="btn-group">
+            <button type="button" data-step="first" aria-label="First move" title="Home">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 20 9 12l10-8v16z" /><path d="M5 19V5" /></svg>
+            </button>
+            <button type="button" data-step="prev" aria-label="Previous move" title="Left arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <button type="button" data-step="play" id="play" class="primary" aria-label="Play" title="Space">
+              <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6z" /><path d="M14 4h4v16h-4z" /></svg>
+            </button>
+            <button type="button" data-step="next" aria-label="Next move" title="Right arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+            <button type="button" data-step="last" aria-label="Last move" title="End">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 4 10 8-10 8V4z" /><path d="M19 5v14" /></svg>
+            </button>
+          </div>
+
+          <div class="scrub">
+            <div class="scrub-labels mono">
+              <span id="ply-label">Ply 0 / 0</span>
+              <span id="turn-label"></span>
+            </div>
+            <input id="scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Position in game" />
+          </div>
+
+          <div class="btn-group">
+            <button type="button" id="speed" class="mono" title="Playback speed">1×</button>
+            <button type="button" id="flip" aria-label="Flip board" title="F">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4 4 4" /><path d="M17 8v12m0 0 4-4m-4 4-4-4" /></svg>
+            </button>
+          </div>
+        </nav>
+      </main>
+
+      <aside id="moves-pane" class="pane">
+        <div class="pane-head">
+          <h2>Moves</h2>
+          <span id="ply-count" class="mono"></span>
+        </div>
+        <div id="moves"></div>
+        <div id="verify" class="verify" hidden>
+          <div class="verify-head">
+            <span>Verification</span>
+            <a id="pgn-link" href="#" download>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M4 21h16" /></svg>
+              PGN
+            </a>
+          </div>
+          <dl id="verify-list"></dl>
+        </div>
+      </aside>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
